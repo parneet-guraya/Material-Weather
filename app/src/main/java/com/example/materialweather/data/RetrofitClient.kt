@@ -29,7 +29,7 @@ object RetrofitClient {
             .addInterceptor(object: Interceptor{
                 override fun intercept(chain: Interceptor.Chain): Response {
                     val request = chain.request()
-                    val modifiedUrl = request.url().newBuilder().addQueryParameter("key",BuildConfig.weatherApiKey).build()
+                    val modifiedUrl = request.url.newBuilder().addQueryParameter("key",BuildConfig.weatherApiKey).build()
                     val modifiedRequest = request.newBuilder().url(modifiedUrl).build()
                     return chain.proceed(modifiedRequest)
                 }
