@@ -1,36 +1,27 @@
 package com.example.materialweather
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.materialweather.ui.theme.MaterialWeatherTheme
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: MainViewModel by viewModels()
+    private val viewModel: WeatherViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -40,20 +31,31 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var isFetched by remember {
-                        mutableStateOf(false)
+                    val uiStateWithFlow by viewModel.uiState.collectAsState()
+
+                    if (uiStateWithFlow.loading.not() && uiStateWithFlow.screenData == null) {
+                        GetCurrentWeather {
+                            viewModel.getCurrentWeather(it)
+                        }
                     }
-//                    Greeting("Android")
-//                    GetCurrentWeather { viewModel.getCurrentWeather(location = it) }
-                    LaunchedEffect(key1 = Unit) {
-                        viewModel.getCurrentWeather("London")
-                        delay(2 * 1000)
-                        isFetched = true
+                    if (uiStateWithFlow.loading) {
+                        CircularProgressIndicator(modifier = Modifier.wrapContentSize())
                     }
-                    if (isFetched) {
-                        AsyncImage(model = "https://cdn.weatherapi.com/weather/128x128/night/266.png",modifier = Modifier.size(128.dp) ,contentScale = ContentScale.Fit ,placeholder = painterResource(id = R.drawable.ic_launcher_background) ,contentDescription = null)
-                        println("Fetched")
+
+                    uiStateWithFlow.screenData?.let {
+                        println("Success")
+                        AsyncImage(
+                            model = "https:${it.current?.condition?.icon}",
+                            contentDescription = null
+                        )
                     }
+
+                    uiStateWithFlow.errorMessage?.let {
+                        Toast.makeText(this@MainActivity, it, Toast.LENGTH_SHORT)
+                            .show()
+                        println("Error")
+                    }
+
                 }
             }
         }
