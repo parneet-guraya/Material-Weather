@@ -31,31 +31,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val uiStateWithFlow by viewModel.uiState.collectAsState()
-
-                    if (uiStateWithFlow.loading.not() && uiStateWithFlow.screenData == null) {
-                        GetCurrentWeather {
-                            viewModel.getCurrentWeather(it)
-                        }
-                    }
-                    if (uiStateWithFlow.loading) {
-                        CircularProgressIndicator(modifier = Modifier.wrapContentSize())
-                    }
-
-                    uiStateWithFlow.screenData?.let {
-                        println("Success")
-                        AsyncImage(
-                            model = "https:${it.current?.condition?.icon}",
-                            contentDescription = null
-                        )
-                    }
-
-                    uiStateWithFlow.errorMessage?.let {
-                        Toast.makeText(this@MainActivity, it, Toast.LENGTH_SHORT)
-                            .show()
-                        println("Error")
-                    }
-
+                    WeatherScreen(weatherViewModel = viewModel)
                 }
             }
         }

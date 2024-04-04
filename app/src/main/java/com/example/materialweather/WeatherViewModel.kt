@@ -19,22 +19,31 @@ class WeatherViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<WeatherScreenState>(WeatherScreenState())
     val uiState = _uiState.asStateFlow()
 
-    private val errorResponse =
-        WeatherScreenState(screenData = null, loading = false, errorMessage = "Unknown Error!!")
-
+    init {
+        getCurrentWeather("London")
+    }
 
     fun getCurrentWeather(location: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(loading = true)
             val weatherResponse = weatherRepository.getCurrentWeather(location)
             when (weatherResponse) {
-                is Response.Success -> _uiState.value = _uiState.value.copy(
-                    loading = false,
-                    screenData = weatherResponse.data,
-                    errorMessage = null
-                )
+                is Response.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        loading = false,
+                        screenData = weatherResponse.data,
+                        errorMessage = null
+                    )
+                    println("Weather Response: ${weatherResponse.data}")
+                }
 
-                is Response.Error -> _uiState.update { errorResponse }
+                is Response.Error -> _uiState.update {
+                    WeatherScreenState(
+                        screenData = null,
+                        loading = false,
+                        errorMessage = weatherResponse.throwable.message
+                    )
+                }
             }
         }
     }
