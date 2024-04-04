@@ -20,7 +20,9 @@ class WeatherViewModel : ViewModel() {
     val uiState = _uiState.asStateFlow()
 
     init {
-        getCurrentWeather("London")
+        val initLocation = "London"
+        getCurrentWeather(initLocation)
+        getHourlyForecast(initLocation)
     }
 
     fun getCurrentWeather(location: String) {
@@ -42,6 +44,29 @@ class WeatherViewModel : ViewModel() {
                         screenData = null,
                         loading = false,
                         errorMessage = weatherResponse.throwable.message
+                    )
+                }
+            }
+        }
+    }
+
+    fun getHourlyForecast(location: String) {
+        viewModelScope.launch {
+
+            _uiState.update { it.copy(loading = true) }
+            val response = weatherRepository.getHourlyForecast(location)
+            when (response) {
+                is Response.Success -> {
+                    _uiState.update {
+                        it.copy(loading = false, screenData = response.data, errorMessage = null)
+                    }
+                }
+
+                is Response.Error -> _uiState.update {
+                    it.copy(
+                        loading = false,
+                        screenData = null,
+                        errorMessage = response.throwable.message
                     )
                 }
             }

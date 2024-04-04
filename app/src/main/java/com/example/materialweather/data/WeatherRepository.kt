@@ -14,4 +14,13 @@ class WeatherRepository(private val remoteWeatherDataSource: RemoteWeatherDataSo
         }
     }
 
+    suspend fun getHourlyForecast(location: String): Response<WeatherResponse> {
+        return try {
+            val weatherResponse = remoteWeatherDataSource.getHourlyForecast(location)
+            Response.Success(weatherResponse)
+        } catch (throwable: Throwable) {
+            Response.Error(throwable = throwable)
+        }
+    }
+
 }
