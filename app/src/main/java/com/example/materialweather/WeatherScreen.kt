@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -68,6 +70,7 @@ fun WeatherScreen(weatherViewModel: WeatherViewModel) {
     screenState.screenData?.let { data ->
         Column(
             modifier = Modifier
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Top
@@ -213,8 +216,8 @@ fun ForecastHour(
 @Composable
 fun DailyForecastCard(forecastDaysList: List<ForecastDay>) {
     Card {
-        LazyColumn {
-            items(forecastDaysList) { day ->
+        Column {
+            forecastDaysList.onEach {day ->
                 DailyForecastItem(
                     iconLink = day.day.condition.icon,
                     minTemp = day.day.minTempC,
@@ -235,7 +238,9 @@ fun DailyForecastItem(
     date: String?
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().height(80.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(80.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
