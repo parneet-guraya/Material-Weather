@@ -23,4 +23,13 @@ class WeatherRepository(private val remoteWeatherDataSource: RemoteWeatherDataSo
         }
     }
 
+    // will drop the first element as it is the current date.
+    suspend fun getDailyForecast(location: String, days: Int = 3): Response<WeatherResponse> {
+        return try {
+            val weatherResponse = remoteWeatherDataSource.getForecast(location, days)
+            Response.Success(weatherResponse)
+        } catch (throwable: Throwable) {
+            Response.Error(throwable = throwable)
+        }
+    }
 }

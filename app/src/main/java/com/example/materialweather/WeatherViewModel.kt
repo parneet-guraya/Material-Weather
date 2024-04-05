@@ -16,13 +16,14 @@ class WeatherViewModel : ViewModel() {
     private val weatherRepository =
         WeatherRepository(RemoteWeatherDataSource(RetrofitClient.weatherApi))
 
-    private val _uiState = MutableStateFlow<WeatherScreenState>(WeatherScreenState())
+    private val _uiState = MutableStateFlow(WeatherScreenState())
     val uiState = _uiState.asStateFlow()
 
     init {
         val initLocation = "London"
         getCurrentWeather(initLocation)
-        getHourlyForecast(initLocation)
+//        getHourlyForecast(initLocation)
+        getDailyForecast(initLocation)
     }
 
     fun getCurrentWeather(location: String) {
@@ -70,6 +71,33 @@ class WeatherViewModel : ViewModel() {
                     )
                 }
             }
+        }
+    }
+
+    fun getDailyForecast(location: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true) }
+            val response = weatherRepository.getDailyForecast(location)
+
+            when (response) {
+                is Response.Success -> _uiState.update {
+                    it.copy(
+                        screenData = response.data,
+                        loading = false,
+                        errorMessage = null
+                    )
+                }
+
+                is Response.Error -> _uiState.update {
+                    it.copy(
+                        errorMessage = response.throwable.message,
+                        loading = false,
+                        screenData = null
+                    )
+                }
+            }
+
+
         }
     }
 

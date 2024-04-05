@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.materialweather.data.ForecastDay
 import com.example.materialweather.data.Hour
 
 @Composable
@@ -58,7 +60,7 @@ fun WeatherScreen(weatherViewModel: WeatherViewModel) {
             showChooseLocationDialog = false
         }, onConfirmClick = { location ->
             weatherViewModel.getCurrentWeather(location)
-            weatherViewModel.getHourlyForecast(location)
+            weatherViewModel.getDailyForecast(location)
             showChooseLocationDialog = false
         })
     }
@@ -91,6 +93,10 @@ fun WeatherScreen(weatherViewModel: WeatherViewModel) {
                         condition = it.condition.copy(icon = "https:${it.condition.icon}"),
                         time = it.copy().time?.takeLast(5)
                     )
+                })
+                Spacer(modifier = Modifier.height(8.dp))
+                DailyForecastCard(forecastDaysList = forecast.forecastDay.map {
+                    it.copy(day = it.day.copy(condition = it.day.condition.copy(icon = "https:${it.day.condition.icon}")))
                 })
             }
         }
@@ -153,6 +159,7 @@ fun CurrentWeatherCard(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
             AsyncImage(
                 modifier = Modifier
                     .size(128.dp),
@@ -160,7 +167,7 @@ fun CurrentWeatherCard(
                 contentDescription = null,
                 placeholder = painterResource(id = R.drawable.ic_launcher_background)
             )
-            Text(text = "$currentWeatherCelsius C", style = MaterialTheme.typography.displayMedium)
+            Text(text = "$currentWeatherCelsius C", style = MaterialTheme.typography.displayLarge)
             Text(text = "$currentWeatherStatus", style = MaterialTheme.typography.titleLarge)
         }
     }
@@ -171,7 +178,7 @@ fun HourlyForecastRow(forecastHourList: List<Hour>) {
     Card {
         LazyRow {
             items(forecastHourList) {
-                ForecastHourCard(
+                ForecastHour(
                     time = it.time,
                     iconLink = it.condition.icon,
                     averageTemp = it.tempC
@@ -182,7 +189,7 @@ fun HourlyForecastRow(forecastHourList: List<Hour>) {
 }
 
 @Composable
-fun ForecastHourCard(
+fun ForecastHour(
     modifier: Modifier = Modifier,
     time: String?,
     iconLink: String?,
@@ -197,13 +204,60 @@ fun ForecastHourCard(
         AsyncImage(
             modifier = Modifier.size(64.dp),
             model = iconLink,
-            contentDescription = null,
-            placeholder = painterResource(
-                id = R.drawable.ic_launcher_background
-            )
+            contentDescription = null
         )
         Text(text = averageTemp.toString())
     }
+}
+
+@Composable
+fun DailyForecastCard(forecastDaysList: List<ForecastDay>) {
+    Card {
+        LazyColumn {
+            items(forecastDaysList) { day ->
+                DailyForecastItem(
+                    iconLink = day.day.condition.icon,
+                    minTemp = day.day.minTempC,
+                    maxTemp = day.day.maxTempC,
+                    date = day.date
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DailyForecastItem(
+    modifier: Modifier = Modifier,
+    iconLink: String?,
+    minTemp: Double?,
+    maxTemp: Double?,
+    date: String?
+) {
+    Row(
+        modifier = modifier.fillMaxWidth().height(80.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
+    ) {
+        AsyncImage(
+            modifier = Modifier.size(64.dp),
+            model = iconLink,
+            contentDescription = null,
+            placeholder = painterResource(id = R.drawable.ic_launcher_background)
+        )
+
+        Text(modifier = Modifier.padding(4.dp), text = date ?: "01-01")
+        Text(
+            modifier = Modifier.padding(4.dp),
+            text = "${minTemp ?: "12"} C / ${maxTemp ?: "30"} C"
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DailyForecastItemPreview() {
+    DailyForecastItem(iconLink = null, minTemp = null, maxTemp = null, date = null)
 }
 
 @Composable
@@ -248,7 +302,7 @@ fun SetLocationDialog(onConfirmClick: (inputText: String) -> Unit, onDismiss: ()
 @Preview(showBackground = true)
 @Composable
 private fun ForecastHourCardPreview() {
-    ForecastHourCard(
+    ForecastHour(
         Modifier.padding(8.dp),
         "12:30AM",
         "",

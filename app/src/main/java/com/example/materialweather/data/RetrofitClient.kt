@@ -35,7 +35,7 @@ object RetrofitClient {
                     return chain.proceed(modifiedRequest)
                 }
             })
-            .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
+            .addInterceptor(HttpLoggingInterceptor { println(it) }.setLevel(HttpLoggingInterceptor.Level.BASIC))
             .build()
     }
 
